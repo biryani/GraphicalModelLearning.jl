@@ -351,7 +351,7 @@ function learn(samples::Array{T,2}, formulation::RPLE, method::NLP) where T <: R
 end
 
 
-function learn(samples::Array{T,2}, formulation::ISE, method::EntropicDescent; return_objectives=false) where T <: Real
+function learn(samples::Array{T,2}, formulation::ISE, method::EntropicDescent; return_objectives=false, init=nothing) where T <: Real
     num_conf, num_spins, num_samples = data_info(samples)
 
     #lambda = formulation.regularizer*sqrt(log((num_spins^2)/0.05)/num_samples)
@@ -378,6 +378,7 @@ function learn(samples::Array{T,2}, formulation::ISE, method::EntropicDescent; r
         η = η_init
 
         est = l1_bound .* (x_plus - x_minus)
+        @info "est=$est"
         exp_arg = nodal_stat * est
         obj = sum((samples[k,1]/num_samples)*exp(-exp_arg[k]) for k=1:num_conf)
         grad = ones(num_spins)
