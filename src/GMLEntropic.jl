@@ -351,9 +351,8 @@ function learn(samples::Array{T,2}, formulation::RPLE, method::NLP) where T <: R
 end
 
 
-function learn(samples::Array{T,2}, formulation::ISE, method::EntropicDescent; return_objectives=false, init=nothing) where T <: Real
+function learn(samples::Array{T,2}, formulation::ISE, method::EntropicDescent; return_objectives=false, init::Union{Array{<:Real,2}, Nothing}=nothing) where T <: Real
     num_conf, num_spins, num_samples = data_info(samples)
-
     #lambda = formulation.regularizer*sqrt(log((num_spins^2)/0.05)/num_samples)
 
     max_steps = method.max_steps
@@ -376,12 +375,15 @@ function learn(samples::Array{T,2}, formulation::ISE, method::EntropicDescent; r
         x_minus = [1/(2*num_spins + 1) for i=1:num_spins]
         y = 1/(2*num_spins + 1)
         η = η_init
-
-        est = l1_bound .* (x_plus - x_minus)
-        @info "est=$est"
+        
+        if init==nothing
+            est = l1_bound .* (x_plus - x_minus)
+        else
+            est = init[current_spin,:]
+        end
         exp_arg = nodal_stat * est
         obj = sum((samples[k,1]/num_samples)*exp(-exp_arg[k]) for k=1:num_conf)
-        grad = ones(num_spins)
+        grad = ones(num_spins) #This is only there to start the while loop below
 
         best_est = est
         best_obj = obj
